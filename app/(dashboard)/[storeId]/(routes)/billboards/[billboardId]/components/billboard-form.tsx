@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useOrigin } from "@/hooks/use-origin";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Store } from "@prisma/client";
+import { Billboard } from "@prisma/client";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
@@ -18,28 +18,35 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
-interface SettingsFormProps {
-    initialData: Store;
+interface BillboardFormProps {
+    initialData: Billboard | null;
 }
 
 const formSchema = z.object({
-    name: z.string().min(1),
+    label: z.string().min(1),
+    imageUrl: z.string().min(1)
 });
 
-type SettingsFormValues = z.infer<typeof formSchema>;
+type BillboardFormValues = z.infer<typeof formSchema>;
 
-export const SettingsForm: React.FC<SettingsFormProps> = ({
+export const BillboardForm: React.FC<BillboardFormProps> = ({
     initialData
 }) =>{
     const params = useParams();
     const router = useRouter();
     const origin = useOrigin();
 
+    const title = initialData ? "Edit billboard" : "Create a billboard";
+    const description = initialData ? "Edit a billboard" : "Add a new billboard";
+    const toastMessage = initialData ? "Billboard updated." : "Billboard created.";
+    const action = initialData ? "Save Changes" : "Create";
+
+
 
     const [open , setOpen] = useState(false);
     const[loading, setLoading] = useState(false);
 
-    const onSubmit = async (data: SettingsFormValues) => {
+    const onSubmit = async (data: BillboardFormValues) => {
         try {
             setLoading(true);
             await axios.patch(`/api/stores/${params.storeId}`, data);
@@ -67,9 +74,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
         }
     }
 
-    const form = useForm<SettingsFormValues>({
+    const form = useForm<BillboardFormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialData
+        defaultValues: initialData || {
+            label: '',
+            imageUrl: ''
+        }
     });
     return(
         <>
@@ -81,9 +91,10 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
         />
             <div className="flex items-center justify-between">
                 <Heading
-                    title= "Settings"
-                    description= "Manage Store Preferences"
+                    title= {title}
+                    description= {description}
                 />
+                {initialData && (
                 <Button
                     disabled={loading}
                     variant= "destructive"
@@ -92,6 +103,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                 >
                     <Trash className="h-4 w-4"/>
                 </Button>
+                )}
             </div>
             <Separator/>
             <Form {...form}>
@@ -101,12 +113,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     <div className="grid grid-cols-3 gap-8">
                         <FormField
                             control={form.control}
-                            name="name"
+                            name="label"
                             render={({ field}) => (
                                 <FormItem>
-                                    <FormLabel>Name</FormLabel>
+                                    <FormLabel>Label</FormLabel>
                                     <FormControl>
-                                        <Input disabled={loading} placeholder="Store name" {...field}/>
+                                        <Input disabled={loading} placeholder="Billboard label" {...field}/>
                                     </FormControl>
                                     <FormMessage/>
                                 </FormItem>
@@ -114,14 +126,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                         />
                     </div>
                     <Button disabled={loading} className="ml-auto" type="submit">
-                        Save Changes
+                        {action}
                     </Button>
                 </form>
             </Form>
             <Separator className="mt-2"/>
-            <ApiAlert title="NEXT_PUBLIC_API_URL" 
-            description={`${origin}/api/${params.storeId}`} 
-            variant="public"/>
         </>
     );
 };
