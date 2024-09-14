@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertModal } from "@/components/modals/alert-modal";
-import { ApiAlert } from "@/components/ui/api-alert";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Heading } from "@/components/ui/heading";
@@ -35,7 +34,6 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({
 }) =>{
     const params = useParams();
     const router = useRouter();
-    const origin = useOrigin();
 
     const title = initialData ? "Edit billboard" : "Create a billboard";
     const description = initialData ? "Edit a billboard" : "Add a new billboard";
@@ -56,6 +54,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({
                 await axios.post(`/api/${params.storeId}/billboards`, data);
             }
             router.refresh();
+            router.push(`/${params.storeId}/billboards`)
             toast.success(toastMessage)
         } catch (error) {
             toast.error("Something went wrong.");
@@ -69,8 +68,8 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({
             setLoading(true);
             await axios.delete(`/api/${params.storeId}/billboards/${params.billboardId}`)
             router.refresh();
-            router.push("/");
-            toast.success("Store deleted.");
+            router.push(`/${params.storeId}/billboards`);
+            toast.success("Billboard deleted.");
         } catch (error) {
             toast.error("Make sure you removed all categories using this billboard first.");
         }finally{
@@ -153,7 +152,7 @@ export const BillboardForm: React.FC<BillboardFormProps> = ({
                     </Button>
                 </form>
             </Form>
-            <Separator className="mt-2"/>
+
         </>
     );
 };
